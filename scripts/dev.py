@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -13,7 +14,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def run(command: list[str]) -> None:
-    subprocess.run(command, cwd=PROJECT_ROOT, check=True)
+    env = os.environ.copy()
+    python_path = env.get("PYTHONPATH")
+    project_root = str(PROJECT_ROOT)
+    env["PYTHONPATH"] = (
+        project_root if not python_path else os.pathsep.join([project_root, python_path])
+    )
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    env.setdefault("PYTHONUTF8", "1")
+    subprocess.run(command, cwd=PROJECT_ROOT, check=True, env=env)
 
 
 

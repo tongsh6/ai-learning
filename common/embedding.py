@@ -9,6 +9,7 @@ import requests
 from common.config import get_embedding_config
 
 
+
 def get_embeddings(texts: list[str], *, debug_response: bool = False) -> list[list[float]]:
     """调用 Embedding API，返回每段文本的向量。"""
     config = get_embedding_config()
@@ -23,7 +24,16 @@ def get_embeddings(texts: list[str], *, debug_response: bool = False) -> list[li
         json=body,
         timeout=config.timeout_seconds,
     )
-    response.raise_for_status()
+
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        detail = response.text.strip()
+        raise requests.HTTPError(
+            f"Embedding 请求失败: status={response.status_code}, model={config.model}, url={config.url}, body={detail}",
+            response=response,
+        ) from exc
+
     result = response.json()
 
     if debug_response:

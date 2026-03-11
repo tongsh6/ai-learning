@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-
+"""
+公共的默认实现，学习过程中可以参考，但是最好在TODO中自己实现一遍
+"""
 def chunk_by_fixed_length(text: str, chunk_size: int = 200) -> list[str]:
     """按固定字符数切分文本。"""
     if chunk_size <= 0:
