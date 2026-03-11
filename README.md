@@ -61,7 +61,7 @@
 
 ## 技术栈
 
-```
+```text
 W1-W9（RAG 阶段）：
   LLM：Ollama qwen3:8b
   Embedding：bge-m3（W2 起替换 nomic-embed-text）
@@ -73,6 +73,84 @@ W10-W13（Agent 阶段）：
   API 框架：FastAPI
   可观测性：LangSmith 或 Phoenix
 ```
+
+---
+
+## 快速开始
+
+```bash
+# 安装开发环境（包含 pytest / ruff）
+pip install -e .[dev]
+
+# 初始化本地配置
+python scripts/dev.py init-env
+```
+
+默认配置走本地 Ollama 的 OpenAI 兼容 Embedding 接口：
+
+```env
+EMBEDDING_URL=http://localhost:11434/v1/embeddings
+EMBEDDING_MODEL=nomic-embed-text
+EMBEDDING_API_KEY=ollama
+```
+
+---
+
+## 本地开发命令
+
+推荐统一使用跨平台脚本 [scripts/dev.py](D:/AI/ai-learning/scripts/dev.py)：
+
+```bash
+# 安装依赖
+python scripts/dev.py install
+
+# 初始化 .env
+python scripts/dev.py init-env
+
+# 运行静态检查
+python scripts/dev.py lint
+
+# 运行测试
+python scripts/dev.py test
+
+# 一次跑完 lint + test
+python scripts/dev.py check
+
+# 运行每周实验
+python scripts/dev.py week1
+python scripts/dev.py week2
+```
+
+---
+
+## CI
+
+仓库已提供最小 GitHub Actions 工作流 [.github/workflows/ci.yml](D:/AI/ai-learning/.github/workflows/ci.yml)：
+
+- Python 3.11
+- 安装 `pip install -e .[dev]`
+- 执行 `ruff check .`
+- 执行 `pytest`
+- 运行平台：Linux / macOS / Windows
+
+这意味着后续新增公共模块或测试时，可以直接纳入统一质量门禁。
+
+Python 项目元数据、`pytest` 配置和 `ruff` 配置已集中放在 [pyproject.toml](D:/AI/ai-learning/pyproject.toml)。
+
+---
+
+## 当前工程化状态
+
+当前已经具备这些基础能力：
+
+- 公共配置：`common/config.py`
+- Embedding 封装：`common/embedding.py`
+- 相似度封装：`common/similarity.py`
+- 分块封装：`common/text_splitters.py`
+- 检索封装：`common/search.py`
+- 基础测试：`tests/`
+- 跨平台开发脚本：`scripts/dev.py`
+- 最小 CI：`.github/workflows/ci.yml`
 
 ---
 

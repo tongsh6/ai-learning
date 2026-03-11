@@ -19,7 +19,17 @@
 ## 运行方式
 
 ```bash
+# 建议先在项目根目录准备依赖和环境变量
+pip install -e .[dev]
+python scripts/dev.py init-env
+
 # 运行实验
+python week2-chunking/02_chunking_and_models.py
+```
+
+如果你已经在 `week2-chunking/` 目录里，也可以直接执行：
+
+```bash
 python 02_chunking_and_models.py
 ```
 

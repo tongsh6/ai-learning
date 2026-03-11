@@ -17,10 +17,19 @@
 ## 运行方式
 
 ```bash
-# 先安装依赖
-pip install numpy requests
+# 先安装开发依赖（建议在项目根目录执行）
+pip install -e .[dev]
+
+# 初始化环境变量文件
+python scripts/dev.py init-env
 
 # 运行实验
+python week1-embedding/01_embedding_basics.py
+```
+
+如果你已经在 `week1-embedding/` 目录里，也可以直接执行：
+
+```bash
 python 01_embedding_basics.py
 ```
 
