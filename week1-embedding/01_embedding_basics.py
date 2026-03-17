@@ -50,7 +50,7 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
     - Body: {"input": texts, "model": "模型名"}
     - 返回的 data[i].embedding 就是向量
     """
-    return shared_get_embeddings(texts, debug_response=True)
+    return shared_get_embeddings(texts, debug_response=False)
 
 
 # ============================
@@ -91,6 +91,20 @@ def analyze_similarities(texts: list[str], embeddings: list[list[float]]):
 
     # 按相似度排序
     similarities.sort(key=lambda x: x[2], reverse=True)
+    # 打印
+    print("  " + "  ".join(f"[{i}]" for i in range(n)))
+    for i in range(n):
+        row = []
+        for j in range(n):
+            if i == j:
+                row.append("  -  ")
+            elif i < j:
+                sim = next(sim for x, y, sim in similarities if (x, y) == (i, j))
+                row.append(f"{sim:.2f}")
+            else:
+                sim = next(sim for x, y, sim in similarities if (x, y) == (j, i))
+                row.append(f"{sim:.2f}")
+        print(f"[{i}] " + "  ".join(row))
 
     # Top 5 最相似
     print("\n🔥 Top 5 最相似的文本对：")

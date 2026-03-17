@@ -173,7 +173,7 @@ def compare_strategies(query: str):
         embeddings = get_embeddings(chunks)
 
         # 检索最相关的块
-        results = search_chunks(query, chunks, embeddings, top_k=2)
+        results = search_chunks(query, chunks, embeddings, top_k=10)
 
         for rank, (idx, sim, text) in enumerate(results, 1):
             preview = text[:60].replace("\n", " ")
