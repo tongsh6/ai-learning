@@ -185,3 +185,47 @@
 - 开始前用 2 分钟画一下 RAG 的数据流：文档 → 分块 → Embedding → 向量数据库 → 检索 → Prompt → LLM → 回答
 - 继续强化 distance/similarity 等度量概念的直觉，在 W4 中自然带入
 - Prompt 工程部分注意区分 System Prompt、Few-shot、Context Window 的作用和限制
+
+---
+
+## 2026-03-19 | Week 4 Prompt 基础 + RAG 管道 | 会话 #6
+
+### 本次覆盖内容
+- [x] W3 回顾：distance = 1 - cosine_similarity 转换
+- [x] Chat API 与 Embedding API 的区别：messages 结构、role 的作用
+- [x] temperature 参数对生成结果的影响（随机性 vs 确定性）
+- [x] System Prompt 的作用：同一问题用不同 System Prompt 得到不同风格回答
+- [x] Few-shot Prompting：zero-shot vs few-shot 的格式控制能力对比
+- [x] Context Window 限制：估算 token 数，理解为什么不能把所有文档塞进去
+- [x] 构建完整 RAG 管道：分块 → 向量化 → Chroma 存储 → 检索 → Prompt 构造 → LLM 生成
+- [x] 对比实验：有无 RAG 的回答质量差异（幻觉 vs 忠实于文档）
+- [x] 完成 5 道思考题
+
+### 知识掌握评估
+| 知识点 | 掌握度 | 说明 |
+|--------|--------|------|
+| Chat API messages 结构 | ⭐⭐⭐ | 理解 role 区分的必要性，能独立构造 messages |
+| temperature 参数 | ⭐⭐⭐ | 理解随机采样机制，能判断 RAG 场景应设低温 |
+| System Prompt | ⭐⭐⭐ | 通过实验直观感受到风格控制能力 |
+| Few-shot Prompting | ⭐⭐⭐ | 理解用示例定义输出格式比文字描述更可靠 |
+| Context Window 限制 | ⭐⭐⭐ | 能估算 token 数，理解 RAG 存在的必要性 |
+| RAG 端到端管道 | ⭐⭐⭐ | 独立实现完整管道：分块→向量化→存储→检索→Prompt→LLM |
+| RAG vs 直接问 LLM 的差异 | ⭐⭐⭐ | 通过对比实验清晰看到 RAG 减少幻觉、提高准确性 |
+| System Prompt 与 User Prompt 优先级 | ⭐⭐ | 直觉正确（系统优先），但对 prompt injection 等边界情况未深入 |
+
+### 发现的知识缺陷
+1. **Prompt injection 安全性**：Q1 回答中认为"系统指令高于用户指令"，实际 LLM 对此没有硬保障，恶意用户输入可以绕过 System Prompt。对 prompt 安全的认知需要补强
+2. **Few-shot 放置位置的权衡**：Q4 倾向全放 User Prompt，但未考虑固定模板放 System Prompt 的效率优势。对"什么内容放哪里"的工程决策还需更多实践
+3. **检索质量与生成质量的关系**：Q5 答到了"garbage in, garbage out"，但对如何量化检索质量（Recall、Precision）还未涉及，这是 W8-W9 的重点
+
+### 学习风格观察
+- 代码实现速度明显提升，8 个函数基本一气呵成，中间只因超时卡了一次
+- 会主动提问（如 temperature 导致输出不同、context_window_demo 不理解做什么），说明不盲目执行，有自己的节奏
+- 对 RAG 管道中各组件的角色已经有清晰的全局视图
+- 踩坑后能自己定位问题（超时 → 调整环境变量），排障能力在提升
+
+### 下次会话建议
+- 第一阶段里程碑验证：补上 PDF 文档读取，实现"对一份 PDF 文档问答"的端到端 RAG
+- 验证完成后可直接进入 W5 混合检索（BM25 + 向量双路检索）
+- W5 中自然引入检索质量评估的概念，为 W8-W9 做铺垫
+- 后续 Prompt 安全性话题可在 W11 Agent 阶段深入讨论

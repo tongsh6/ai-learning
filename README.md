@@ -159,3 +159,20 @@ Python 项目元数据、`pytest` 配置和 `ruff` 配置已集中放在 [pyproj
 - 核心逻辑自己写，不要让 AI 生成完整实现
 - 可以查文档，卡住超过 30 分钟找导师要提示
 - 每周在对应 README 里写 3 句话总结：学到了什么、踩了什么坑、下周关注什么
+
+---
+
+## 课件生成规范
+
+后续新增或重写周课件时，统一参考 [COURSEWARE_TEMPLATE.md](/Users/tongshuanglong/ai/ai-learning/COURSEWARE_TEMPLATE.md)。
+
+课件生成经验和评审结论统一沉淀在 [COURSEWARE_LOG.md](/Users/tongshuanglong/ai/ai-learning/COURSEWARE_LOG.md)，更新时机与 `LEARNING_LOG.md` 一致。
+
+目标不是让 AI “多写内容”，而是确保课件满足：
+
+- 只围绕一个主问题展开
+- 生成前必须参考 `README.md`、`LEARNING_LOG.md` 和 `COURSEWARE_LOG.md`
+- 代码组织必须遵守当前项目架构
+- 能承接上周并为下周铺垫
+- 有完整实验闭环和验收标准
+- 会显式暴露常见误区，而不是只给结论
