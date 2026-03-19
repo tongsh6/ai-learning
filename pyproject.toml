@@ -36,3 +36,4 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 "week2-chunking/02_chunking_and_models.py" = ["E501"]
+"milestone-1/milestone_rag_pdf.py" = ["F401", "F841"]
