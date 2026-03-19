@@ -2,3 +2,5 @@ numpy
 requests
 pytest
 ruff
+PyMuPDF
+chromadb

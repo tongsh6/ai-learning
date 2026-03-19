@@ -44,3 +44,5 @@ pytest-cache-files-*/
 .test_tmp/
 .serena/
 
+# PDF data files
+milestone-1/data/*.pdf

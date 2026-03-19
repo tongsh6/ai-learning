@@ -6,6 +6,8 @@ requires-python = ">=3.11"
 dependencies = [
     "numpy",
     "requests",
+    "PyMuPDF",
+    "chromadb",
 ]
 
 [project.optional-dependencies]
@@ -19,8 +21,6 @@ testpaths = ["tests"]
 addopts = [
     "-p",
     "no:cacheprovider",
-    "-p",
-    "no:tmpdir",
 ]
 
 [tool.ruff]
