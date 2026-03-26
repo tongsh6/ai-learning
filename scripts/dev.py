@@ -78,6 +78,22 @@ def week2() -> None:
     run([sys.executable, str(PROJECT_ROOT / "week2-chunking" / "02_chunking_and_models.py")])
 
 
+def week3() -> None:
+    run([sys.executable, str(PROJECT_ROOT / "week3-vector-db" / "03_vector_search.py")])
+
+
+def week4() -> None:
+    run([sys.executable, str(PROJECT_ROOT / "week4-rag-pipeline" / "04_basic_rag.py")])
+
+
+def week5() -> None:
+    run([sys.executable, str(PROJECT_ROOT / "week5-hybrid-search" / "05_hybrid_search.py")])
+
+
+def milestone1() -> None:
+    run([sys.executable, str(PROJECT_ROOT / "milestone-1" / "milestone_rag_pdf.py")])
+
+
 TASKS = {
     "install": install,
     "init-env": init_env,
@@ -86,6 +102,10 @@ TASKS = {
     "check": check,
     "week1": week1,
     "week2": week2,
+    "week3": week3,
+    "week4": week4,
+    "week5": week5,
+    "milestone1": milestone1,
 }
 
 
