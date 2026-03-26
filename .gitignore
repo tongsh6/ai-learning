@@ -46,3 +46,4 @@ pytest-cache-files-*/
 
 # PDF data files
 milestone-1/data/*.pdf
+/week3-vector-db/chroma_data/

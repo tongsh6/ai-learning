@@ -21,7 +21,7 @@ from common.text_splitters import chunk_by_paragraph, chunk_by_sliding_window
 # ============================
 # 配置
 # ============================
-PDF_PATH = Path(__file__).parent / "data" / "xxx.pdf"  # TODO：替换为你选的 PDF 文件名
+PDF_PATH = Path(__file__).parent / "data" / "rag_intro_zh.pdf"  # TODO：替换为你选的 PDF 文件名
 
 
 # ============================================================
@@ -35,7 +35,7 @@ def load_and_chunk(pdf_path: str) -> list[str]:
     TODO：自己实现
     提示：
     - 用 read_pdf(pdf_path) 获取全文文本
-    - 打印文档总字数
+    - 打印文档总字数。
     - 用 chunk_by_paragraph() 分块
     - 打印分块数量
     - 打印每块的前 50 字作为预览
@@ -43,7 +43,21 @@ def load_and_chunk(pdf_path: str) -> list[str]:
     - 返回分块列表
     """
     # 你的代码写在这里
-    raise NotImplementedError("请在这里实现 load_and_chunk")
+    # raise NotImplementedError("请在这里实现 load_and_chunk")
+    full_text = read_pdf(pdf_path)
+    print(f"文档总字数: {len(full_text)}")
+    chunks = chunk_by_paragraph(full_text)
+    print(f"分块数量: {len(chunks)}")
+    for i, chunk in enumerate(chunks):
+        print(f"块 {i} 预览: {chunk[:50]}")
+    if len(chunks) < 3 or any(len(chunk) > 1000 for chunk in chunks):
+        print("⚠️ 分块数过少或存在过长块，改用滑动窗口分块")
+        chunks = chunk_by_sliding_window(full_text, 500, 100)
+        print(f"滑动窗口分块数量: {len(chunks)}")
+        for i, chunk in enumerate(chunks):
+            print(f"块 {i} 预览: {chunk[:50]}")
+    return chunks
+
 
 
 # ============================================================
@@ -66,8 +80,15 @@ def build_knowledge_base(chunks: list[str]):
     - 返回 collection
     """
     # 你的代码写在这里
-    raise NotImplementedError("请在这里实现 build_knowledge_base")
-
+    # raise NotImplementedError("请在这里实现 build_knowledge_base")
+    embeddings = get_embeddings(chunks)
+    client = chromadb.Client()
+    collection = client.create_collection(name="milestone1")
+    ids = [f"chunk_{i}" for i in range(len(chunks))]
+    metadatas = [{"chunk_index": i, "char_count": len(chunk)} for i, chunk in enumerate(chunks)]
+    collection.add(ids=ids, documents=chunks, embeddings=embeddings, metadatas=metadatas)
+    print(f"知识库中存储的文档数量: {len(collection.get()['documents'])}")
+    return collection
 
 # ============================================================
 # Part 3：交互式问答
@@ -85,8 +106,13 @@ def rag_retrieve(collection, query: str, top_k: int = 3) -> list[str]:
     - 返回文档块列表
     """
     # 你的代码写在这里
-    raise NotImplementedError("请在这里实现 rag_retrieve")
-
+    # raise NotImplementedError("请在这里实现 rag_retrieve")
+    query_embedding = get_embeddings([query])[0]
+    results = collection.query(query_embeddings=[query_embedding], n_results=top_k)
+    retrieved_chunks = results["documents"][0]
+    for i, chunk in enumerate(retrieved_chunks):
+        print(f"检索到的块 {i} 预览: {chunk[:80]}")
+    return retrieved_chunks
 
 def build_rag_prompt(query: str, context_chunks: list[str]) -> list[dict]:
     """
@@ -100,8 +126,10 @@ def build_rag_prompt(query: str, context_chunks: list[str]) -> list[dict]:
     - 返回 messages 列表
     """
     # 你的代码写在这里
-    raise NotImplementedError("请在这里实现 build_rag_prompt")
-
+    # raise NotImplementedError("请在这里实现 build_rag_prompt")
+    system_prompt = "你是一个基于文档的问答助手，请基于提供的上下文回答问题，如果上下文中没有相关信息，请明确说'根据提供的资料，我无法回答这个问题'，不要编造信息。"
+    user_prompt = f"上下文信息：\n{''.join(context_chunks)}\n\n问题：{query}"
+    return [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
 
 def rag_query(collection, query: str) -> str:
     """
@@ -116,7 +144,13 @@ def rag_query(collection, query: str) -> str:
     - 返回回复文本
     """
     # 你的代码写在这里
-    raise NotImplementedError("请在这里实现 rag_query")
+    # raise NotImplementedError("请在这里实现 rag_query")
+    retrieved_chunks = rag_retrieve(collection, query)
+    prompt = build_rag_prompt(query, retrieved_chunks)
+    answer = chat(prompt)
+    print(f"RAG 回答: {answer}")
+    return answer
+
 
 
 def interactive_qa(collection):
@@ -144,32 +178,32 @@ def interactive_qa(collection):
 # TODO：选定 PDF 后，替换为基于文档内容的问题和参考答案
 EVAL_QUESTIONS = [
     {
-        "question": "（替换为基于你 PDF 内容的问题 1）",
-        "reference": "（从文档中摘出的参考答案）",
+        "question": "提示词工程（Prompt Engineering）在 RAG 中的应用",
+        "reference": "一个好的 RAG Prompt 应该包含：* **角色设定**：如“你是一个严谨的文档分析专家”。* **约束条件**：如“仅基于提供的资料回答”、“如果没有请说不知道”。* **推理引导**：引导模型在回答前先列出引用来源。",
         "aspect": "事实准确性",
     },
     {
-        "question": "（替换为问题 2）",
-        "reference": "（参考答案）",
+        "question": "检索的最后防线",
+        "reference": "重排序（Reranking）：检索的最后防线初筛阶段为了速度通常使用向量检索（Bi-Encoder），但其精度有限。Reranking使用交叉编码器（Cross-Encoder）对 Top-K个结果进行深度语义比对，虽然速度慢，但能极大地过滤掉无关噪声，是提升 RAG质量的“银弹”。",
         "aspect": "事实准确性",
     },
     {
-        "question": "（替换为问题 3）",
-        "reference": "（参考答案）",
+        "question": "如何提升回答质量",
+        "reference": "通过 LLM 或信息熵方法剔除冗余句子，只保留核心证据，能显著提升回答质量",
         "aspect": "事实准确性",
     },
     {
-        "question": "（替换为问题 4：需要跨多段整合信息）",
+        "question": "如何量化“好用”",
         "reference": "（参考答案）",
         "aspect": "综合性",
     },
     {
-        "question": "（替换为问题 5：需要跨多段整合信息）",
+        "question": "RAG 系统中，哪些因素会导致回答质量不稳定？",
         "reference": "（参考答案）",
         "aspect": "综合性",
     },
     {
-        "question": "（替换为问题 6：文档中没有的信息，期望 LLM 拒绝回答）",
+        "question": "Claude code interpreter 模式的核心能力是什么？",
         "reference": "文档中未提及此内容",
         "aspect": "忠实度",
     },
@@ -226,16 +260,18 @@ def run_evaluation(collection):
 🤔 完成里程碑验证后，回答以下问题：
 
 Q1: 对比 PDF 文档和 W4 硬编码文本，RAG 效果有什么差异？你觉得主要原因是什么？
-A1:
+A1: W4 的硬编码文本通常是精心挑选和优化过的，内容简洁且高度相关，适合直接被 LLM 理解和利用。而 PDF 文档则可能包含大量冗余、格式杂乱、语言不规范的文本，这些都会干扰 RAG 的检索和理解过程，导致回答质量下降。主要原因是 PDF 文档的噪声和非结构化特性，使得分块、Embedding 和检索环节都面临更大的挑战。
+    
 
 Q2: 在预设评估中，哪类问题 RAG 回答得最好？哪类最差？说明了什么？
-A2:
+A2: 通常来说，事实性强、直接从文档中可以找到答案的问题（如 Q1、Q2）RAG 回答得较好，因为它们依赖于检索到的相关信息。而需要综合推理、归纳总结或者文档中没有明确提及的问题（如 Q4、Q5、Q6）RAG 回答得较差，因为它们不仅需要准确检索，还需要更高层次的理解和推理能力。这说明 RAG 在处理明确的事实查询时表现较好，但在需要深度理解和推理的综合性问题上仍有提升空间。
 
 Q3: 检索到的文档块和你预期的一样吗？如果不一样，你觉得瓶颈在哪里（分块？Embedding？检索？）？
-A3:
+A3: 检索到的文档块可能与预期不完全一致，尤其是在分块质量不高或者文档内容过于冗杂的情况下。瓶颈可能出现在分块环节，如果分块过大或过小，都会影响后续的 Embedding 和检索效果；也可能在 Embedding 环节，如果向量表示不能很好地捕捉文本语义，就会导致检索结果不相关；最后也可能是检索算法本身的限制，无法有效区分相关和不相关的块。需要具体分析每个环节的输出才能定位瓶颈。
 
 Q4: 如果要把这个系统的回答质量从"能用"提升到"好用"，你会优先改进哪个环节？为什么？
-A4:
+A4: 1.原始文本的结构化处理 2.然后改进分块环节，因为分块的质量直接影响到后续的 Embedding 和检索效果。一个好的分块策略能够确保每个块都包含完整的语义单元，既不过于冗长也不过于碎片化，这样才能让 Embedding 
+更准确地捕捉文本含义，检索时也更容易找到真正相关的块。相比之下，Embedding 和检索算法虽然重要，但如果输入的文本块质量不高，再先进的算法也难以弥补这个问题。因此，优化分块是提升整体回答质量的关键一步。
 """
 
 

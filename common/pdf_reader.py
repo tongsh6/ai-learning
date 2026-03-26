@@ -46,7 +46,16 @@ def read_pdf(file_path: str) -> str:
     # 4. 不同页的文本用双换行 "\n\n" 连接
     # 5. 用 _clean_text() 清理多余空行
     # 6. 返回清理后的文本
-    raise NotImplementedError("请在这里实现 read_pdf")
+    # raise NotImplementedError("请在这里实现 read_pdf")
+    file = fitz.open(file_path)
+    all_pages_text = []
+    for page in file:
+        blocks = page.get_text("blocks")
+        page_text_blocks = [block[4] for block in blocks if block[6] == 0]
+        page_text = "\n\n".join(page_text_blocks)
+        all_pages_text.append(page_text)
+    full_text = "\n\n".join(all_pages_text)
+    return _clean_text(full_text)
 
 
 def read_pdf_pages(file_path: str) -> list[dict]:
@@ -79,8 +88,16 @@ def read_pdf_pages(file_path: str) -> list[dict]:
     # 4. 将文本块用双换行连接，再用 _clean_text() 清理
     # 5. 构造 {"page": 页码, "text": 清理后文本} 字典
     # 6. 返回字典列表
-    raise NotImplementedError("请在这里实现 read_pdf_pages")
-
+    # raise NotImplementedError("请在这里实现 read_pdf_pages")
+    file = fitz.open(file_path)
+    pages_text = []
+    for i, page in enumerate(file, start=1):
+        blocks = page.get_text("blocks")
+        page_text_blocks = [block[4] for block in blocks if block[6] == 0]
+        page_text = "\n\n".join(page_text_blocks)
+        cleaned_text = _clean_text(page_text)
+        pages_text.append({"page": i, "text": cleaned_text})
+    return pages_text
 
 def _clean_text(text: str) -> str:
     """清理提取的文本：将连续 3+ 个换行合并为 2 个。
