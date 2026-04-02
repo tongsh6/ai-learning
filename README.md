@@ -4,6 +4,14 @@
 > **节奏**：每周 5-10 小时，每周 1-2 个动手实验 + 思考题
 > **方式**：苏格拉底式引导，代码自己写
 
+## 路线设计原则
+
+- 先打牢 RAG 基础，再进入 Agent；不跳过检索、评估、失败分析这些基本功
+- 每周只围绕一个主问题展开，重点建立“现象 -> 原因 -> 结论”的工程直觉
+- Agent 不是“让模型自由发挥”，而是把不稳定模型放进可控系统：工具白名单、状态管理、重试降级、人工审批、安全边界
+- 传统工程能力依然重要，但要补上 LLM 特有问题：上下文预算、Prompt 注入、模型幻觉、厂商限流、非确定性输出
+- 优先自己实现最小闭环，再决定是否抽公共模块、是否引入框架
+
 ---
 
 ## 第一阶段：基础构建（Week 1-4）
@@ -11,9 +19,9 @@
 | 周 | 主题 | 实验 | 交付物 |
 |---|---|---|---|
 | **W1** ✅ | Embedding 基础 | 调 API 获取向量、手写余弦相似度、分析相似度矩阵 | `01_embedding_basics.py` |
-| **W2** | 分块 + 模型选型 | 实现 3 种 Chunking 策略（固定长度/按段落/滑动窗口）；选做：拉 `bge-m3` 对比 `nomic-embed-text` | `02_chunking_and_models.py` |
-| **W3** | 向量数据库 | Chroma 存储向量、语义搜索、Top-K 检索；补充阅读 HNSW/IVF 原理 | `03_vector_search.py` |
-| **W4** | Prompt 基础 + RAG 管道 | 上半周：System Prompt、Few-shot、Context Window 限制；下半周：串联 W2-W3 组装完整 RAG | `04_basic_rag.py` |
+| **W2** | 分块 + 模型选型 | 实现 3 种 Chunking 策略（固定长度/按段落/滑动窗口）；理解“怎么切文本”本质上是在决定后续能否召回证据；选做：拉 `bge-m3` 对比 `nomic-embed-text` | `02_chunking_and_models.py` |
+| **W3** | 向量数据库 | Chroma 存储向量、语义搜索、Top-K 检索；补充阅读 HNSW/IVF 原理；初步理解“什么适合进向量库，什么不适合” | `03_vector_search.py` |
+| **W4** | Prompt 基础 + RAG 管道 | 上半周：System Prompt、Few-shot、上下文预算；补充：RAG 中的 Prompt Injection 与非可信上下文；下半周：串联 W2-W3 组装完整 RAG | `04_basic_rag.py` |
 
 **里程碑**：用中文友好模型 + 自己写的代码，对一份 PDF 文档问答。
 
@@ -24,27 +32,27 @@
 | 周 | 主题 | 实验 | 交付物 |
 |---|---|---|---|
 | **W5** | 混合检索 | BM25 + 向量双路检索，合并排序，对比纯向量效果 | `05_hybrid_search.py` |
-| **W6** | Reranking | Cross-Encoder 重排序，量化 Top-K 准确率提升 | `06_reranking.py` |
-| **W7** | 查询改写 & 多路召回 | HyDE、Query Expansion，多路合并去重；补充：Late Chunking、CRAG/Self-RAG 变体 | `07_query_enhancement.py` |
-| **W8** | RAG 评估（上） | 手写 Retrieval Recall 和 Precision；构建评测数据集（问题-标准答案对） | `08_rag_evaluation.py` |
-| **W9** | RAG 评估（下） | 手写 Answer Faithfulness（LLM-as-Judge）；端到端评估报告，定位瓶颈 | `09_rag_evaluation_advanced.py` |
+| **W6** | Reranking | Cross-Encoder 重排序，量化 Top-K 准确率提升；明确区分“召回不全”与“排序不准” | `06_reranking.py` |
+| **W7** | 查询改写 + 多路召回控制 | HyDE、Query Expansion，多路合并去重；补充：Late Chunking、CRAG / Self-RAG 变体；学习何时该改写查询、何时不该过度依赖模型自由发挥 | `07_query_enhancement.py` |
+| **W8** | RAG 评估（上） | 手写 Retrieval Recall 和 Precision；构建评测数据集（问题-标准答案对）；开始形成“证据质量可量化”的意识 | `08_rag_evaluation.py` |
+| **W9** | RAG 评估（下） | 手写 Answer Faithfulness（LLM-as-Judge）；补充拒答质量、误答率、安全失败率等维度；端到端评估报告，定位瓶颈 | `09_rag_evaluation_advanced.py` |
 
 **里程碑**：能对 RAG 系统做量化评估，定位"是检索不行还是生成不行"。
 
 ---
 
-## 第三阶段：Agent 实战（Week 10-13）
+## 第三阶段：Agent 工程（Week 10-13）
 
-> ⚠️ 本阶段切换至**云端 API**（GPT-4o-mini 或 Qwen-Max），专注 Agent 架构
+> ⚠️ 本阶段切换至**云端 API**（GPT-4o-mini 或 Qwen-Max），重点不只是“会调模型”，而是“能把不稳定模型放进可控系统”
 
 | 周 | 主题 | 实验 | 交付物 |
 |---|---|---|---|
-| **W10** | Function Calling | 前半天：环境切换（云端 API 配置）；主线：LLM 自主调用工具（天气、计算器、DB 查询） | `10_function_calling.py` |
-| **W11** | ReAct Agent | Thought → Action → Observation 循环，错误恢复，最大轮次控制；补充：多 Agent 协作、Agent 挑战 | `11_react_agent.py` |
-| **W12** | Agentic RAG + API 层 | Agent 自主判断是否检索；FastAPI 暴露接口，组装完整系统 | `12_agentic_rag/` |
-| **W13** | 综合项目收尾 | 接入 LangSmith/Phoenix 可观测性；多文档支持；评估报告；整理为面试作品 | `13_final_project/` |
+| **W10** | 可靠工具调用 | 环境切换（云端 API 配置）；主线：Function Calling + 工具 Schema 设计 + 参数校验 + 工具白名单 + 超时/重试/降级；目标不是“调起来”，而是“调得可控” | `10_reliable_tool_calling.py` |
+| **W11** | Agent Runtime 基础 | ReAct / 分步规划；补充：状态管理、checkpoint / resume、最大轮次、人类审批、补偿式回滚；理解 Agent 不等于“无限循环调用模型” | `11_agent_runtime.py` |
+| **W12** | Agentic RAG + 执行编排 | Agent 判断是否检索、何时检索、何时拒答、何时请求人工确认；FastAPI 暴露接口；补充上下文压缩与关键状态保留 | `12_agentic_rag/` |
+| **W13** | 综合项目收尾 | 接入 LangSmith / Phoenix 可观测性；多文档支持；失败案例分析；加入 Prompt 注入、工具幻觉、限流超时等验收场景；整理为面试作品 | `13_final_project/` |
 
-**里程碑**：可演示的完整系统，有 API 层 + 监控面板，直接作为面试作品。
+**里程碑**：可演示的完整系统，不只“能跑通”，还要能解释为什么这样设计、怎么失败恢复、如何做最低限度安全防护。
 
 ---
 
@@ -53,9 +61,10 @@
 | 周 | 补充内容 | 对应面试题 |
 |---|---|---|
 | W3 | HNSW / IVF 索引原理 | Q4、Q8 |
+| W4 | Prompt Injection、上下文预算、非可信上下文 | 安全追问 |
 | W7 | Late Chunking、CRAG / Self-RAG 变体 | Q13、Q15 |
-| W11 | 多 Agent 协作模式、Agent 挑战与安全 | Q20、Q22 |
-| W13 | 多语言 RAG 思路、Token 成本控制 | Q29、Q30 |
+| W11 | Agent 状态管理、工具失败恢复、人工审批 | Q20、Q22 |
+| W13 | 多语言 RAG、Token 成本控制、Agent 落地边界 | Q29、Q30 |
 
 ---
 
@@ -70,8 +79,10 @@ W1-W9（RAG 阶段）：
 
 W10-W13（Agent 阶段）：
   LLM：GPT-4o-mini 或 Qwen-Max（云端 API）
+  Agent Runtime：先手写最小闭环，必要时再引入编排框架
   API 框架：FastAPI
   可观测性：LangSmith 或 Phoenix
+  重点能力：Tool Calling、状态管理、上下文压缩、失败恢复、安全防护
 ```
 
 ---
