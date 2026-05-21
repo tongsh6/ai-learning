@@ -33,7 +33,7 @@
 |---|---|---|---|
 | **W5** | 混合检索 | BM25 + 向量双路检索，合并排序，对比纯向量效果 | `05_hybrid_search.py` |
 | **W6** | Reranking | Cross-Encoder 重排序，量化 Top-K 准确率提升；明确区分“召回不全”与“排序不准” | `06_reranking.py` |
-| **W7** | 查询改写 + 多路召回控制 | HyDE、Query Expansion，多路合并去重；补充：Late Chunking、CRAG / Self-RAG 变体；学习何时该改写查询、何时不该过度依赖模型自由发挥 | `07_query_enhancement.py` |
+| **W7** | 查询改写 + 多路召回控制 | HyDE、Query Expansion，多路去重；**引入 2026 标配 Late Chunking 与本地端侧检索（Edge Search）极速召回直觉**；补充 CRAG / Self-RAG；学习何时该改写、何时不该过度依赖模型 | `07_query_enhancement.py` |
 | **W8** | RAG 评估（上） | 手写 Retrieval Recall 和 Precision；构建评测数据集（问题-标准答案对）；开始形成“证据质量可量化”的意识 | `08_rag_evaluation.py` |
 | **W9** | RAG 评估（下） | 手写 Answer Faithfulness（LLM-as-Judge）；补充拒答质量、误答率、安全失败率等维度；端到端评估报告，定位瓶颈 | `09_rag_evaluation_advanced.py` |
 
@@ -48,9 +48,9 @@
 | 周 | 主题 | 实验 | 交付物 |
 |---|---|---|---|
 | **W10** | 可靠工具调用 | 环境切换（云端 API 配置）；主线：Function Calling + 工具 Schema 设计 + 参数校验 + 工具白名单 + 超时/重试/降级；目标不是“调起来”，而是“调得可控” | `10_reliable_tool_calling.py` |
-| **W11** | Agent Runtime 基础 | ReAct / 分步规划；补充：状态管理、checkpoint / resume、最大轮次、人类审批、补偿式回滚；理解 Agent 不等于“无限循环调用模型” | `11_agent_runtime.py` |
+| **W11** | Agent Runtime 基础 | ReAct / 分步规划；**探讨 2026 年长推理模型（Reasoning Models）对 Agent 规划层的重塑与约束**；补充状态管理、checkpoint/resume、最大轮次、人类审批、补偿式回滚；理解 Agent 不等于“无限循环” | `11_agent_runtime.py` |
 | **W12** | Agentic RAG + 执行编排 | Agent 判断是否检索、何时检索、何时拒答、何时请求人工确认；FastAPI 暴露接口；补充上下文压缩与关键状态保留 | `12_agentic_rag/` |
-| **W13** | 综合项目收尾 | 接入 LangSmith / Phoenix 可观测性；多文档支持；失败案例分析；加入 Prompt 注入、工具幻觉、限流超时等验收场景；整理为面试作品 | `13_final_project/` |
+| **W13** | 综合项目收尾 | 接入可观测性；多文档支持与安全加固；**发挥 Vue 前端优势，交付 Controllable Agent Dashboard（可视化状态交互看板，支持 HITL 断点干预与 DAG 渲染）**；整理为面试杀手锏作品 | `13_final_project/` |
 
 **里程碑**：可演示的完整系统，不只“能跑通”，还要能解释为什么这样设计、怎么失败恢复、如何做最低限度安全防护。
 
@@ -78,11 +78,11 @@ W1-W9（RAG 阶段）：
   全手写 Python
 
 W10-W13（Agent 阶段）：
-  LLM：GPT-4o-mini 或 Qwen-Max（云端 API）
-  Agent Runtime：先手写最小闭环，必要时再引入编排框架
-  API 框架：FastAPI
+  LLM：GPT-4o-mini、Qwen-Max 或 2026 主流推理模型
+  Agent Runtime：先手写最小闭环，再引入 Controllable DAG 编排思想
+  API / 前端：FastAPI + Vue 3（实现 Controllable Agent 可视化交互看板）
   可观测性：LangSmith 或 Phoenix
-  重点能力：Tool Calling、状态管理、上下文压缩、失败恢复、安全防护
+  重点能力：Tool Calling、状态管理（Checkpoint）、上下文压缩、安全防御（防注入）、人类协同（HITL）
 ```
 
 ---
