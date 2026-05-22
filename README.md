@@ -11,6 +11,16 @@
 - Agent 不是“让模型自由发挥”，而是把不稳定模型放进可控系统：工具白名单、状态管理、重试降级、人工审批、安全边界
 - 传统工程能力依然重要，但要补上 LLM 特有问题：上下文预算、Prompt 注入、模型幻觉、厂商限流、非确定性输出
 - 优先自己实现最小闭环，再决定是否抽公共模块、是否引入框架
+- 模型、框架和协议都按“当前主流能力”动态替换，不把路线绑定到某个固定模型名或框架名
+- 可观测性和评估要前移：从 RAG 优化阶段开始记录实验结果，Agent 阶段必须能追踪每一步工具调用和状态变化
+
+## 2026-05 路线校准
+
+当前路线不推倒重来，只做三点校准：
+
+1. **模型名去硬编码**：W10-W13 不再固定押注 `GPT-4o-mini` 或某个厂商模型，而是按当时可用的主流低成本模型和推理模型选择。
+2. **MCP 前移到工具调用阶段**：W10 开始对比传统 Function Calling 与 MCP 工具接口，重点理解工具描述、权限边界、输入校验和审计。
+3. **观测与评估前移**：W5 开始保存结构化实验结果，W8-W9 引入 tracing / eval 思维，W13 负责整合展示，而不是最后才补。
 
 ---
 
@@ -31,11 +41,11 @@
 
 | 周 | 主题 | 实验 | 交付物 |
 |---|---|---|---|
-| **W5** | 混合检索 | BM25 + 向量双路检索，合并排序，对比纯向量效果 | `05_hybrid_search.py` |
-| **W6** | Reranking | Cross-Encoder 重排序，量化 Top-K 准确率提升；明确区分“召回不全”与“排序不准” | `06_reranking.py` |
-| **W7** | 查询改写 + 多路召回控制 | HyDE、Query Expansion，多路去重；**引入 2026 标配 Late Chunking 与本地端侧检索（Edge Search）极速召回直觉**；补充 CRAG / Self-RAG；学习何时该改写、何时不该过度依赖模型 | `07_query_enhancement.py` |
-| **W8** | RAG 评估（上） | 手写 Retrieval Recall 和 Precision；构建评测数据集（问题-标准答案对）；开始形成“证据质量可量化”的意识 | `08_rag_evaluation.py` |
-| **W9** | RAG 评估（下） | 手写 Answer Faithfulness（LLM-as-Judge）；补充拒答质量、误答率、安全失败率等维度；端到端评估报告，定位瓶颈 | `09_rag_evaluation_advanced.py` |
+| **W5** | 混合检索 + 实验记录 | BM25 + 向量双路检索，合并排序，对比纯向量效果；把查询、Top-K、命中情况和结论结构化落盘 | `05_hybrid_search.py` |
+| **W6** | Reranking | Cross-Encoder 或轻量规则重排序，量化 Top-K 准确率、延迟和成本；明确区分“召回不全”与“排序不准” | `06_reranking.py` |
+| **W7** | 查询改写 + 多路召回控制 | HyDE、Query Expansion、多路去重；对比 Late Chunking / 段落分块 / 滑窗分块，不把任何策略当默认最优；补充 CRAG / Self-RAG 的适用边界 | `07_query_enhancement.py` |
+| **W8** | RAG 评估（上） | 手写 Retrieval Recall、Precision、MRR；构建评测数据集（问题-标准答案-证据块）；开始形成“证据质量可量化”的意识 | `08_rag_evaluation.py` |
+| **W9** | RAG 评估（下） | 手写 Answer Faithfulness（LLM-as-Judge）；补充拒答质量、误答率、安全失败率、引用一致性；引入最小 tracing / eval 报告定位瓶颈 | `09_rag_evaluation_advanced.py` |
 
 **里程碑**：能对 RAG 系统做量化评估，定位"是检索不行还是生成不行"。
 
@@ -43,14 +53,14 @@
 
 ## 第三阶段：Agent 工程（Week 10-13）
 
-> ⚠️ 本阶段切换至**云端 API**（GPT-4o-mini 或 Qwen-Max），重点不只是“会调模型”，而是“能把不稳定模型放进可控系统”
+> ⚠️ 本阶段切换至**云端 API**。模型按当时主流能力选择：低成本模型用于常规工具调用，推理模型用于复杂规划和长任务验证。重点不只是“会调模型”，而是“能把不稳定模型放进可控系统”。
 
 | 周 | 主题 | 实验 | 交付物 |
 |---|---|---|---|
-| **W10** | 可靠工具调用 | 环境切换（云端 API 配置）；主线：Function Calling + 工具 Schema 设计 + 参数校验 + 工具白名单 + 超时/重试/降级；目标不是“调起来”，而是“调得可控” | `10_reliable_tool_calling.py` |
-| **W11** | Agent Runtime 基础 | ReAct / 分步规划；**探讨 2026 年长推理模型（Reasoning Models）对 Agent 规划层的重塑与约束**；补充状态管理、checkpoint/resume、最大轮次、人类审批、补偿式回滚；理解 Agent 不等于“无限循环” | `11_agent_runtime.py` |
-| **W12** | Agentic RAG + 执行编排 | Agent 判断是否检索、何时检索、何时拒答、何时请求人工确认；FastAPI 暴露接口；补充上下文压缩与关键状态保留 | `12_agentic_rag/` |
-| **W13** | 综合项目收尾 | 接入可观测性；多文档支持与安全加固；**发挥 Vue 前端优势，交付 Controllable Agent Dashboard（可视化状态交互看板，支持 HITL 断点干预与 DAG 渲染）**；整理为面试杀手锏作品 | `13_final_project/` |
+| **W10** | 可靠工具调用 + MCP 入门 | 环境切换（云端 API 配置）；Function Calling + 工具 Schema 设计 + 参数校验 + 工具白名单 + 超时/重试/降级；补一个最小 MCP 工具接口对照实验，理解工具协议和权限边界 | `10_reliable_tool_calling.py` |
+| **W11** | Agent Runtime 基础 | ReAct / 分步规划；探讨推理模型对 Agent 规划层的重塑与约束；补充状态管理、checkpoint/resume、最大轮次、人类审批、补偿式回滚、工具调用审计 | `11_agent_runtime.py` |
+| **W12** | Agentic RAG + 执行编排 | Agent 判断是否检索、何时检索、何时拒答、何时请求人工确认；FastAPI 暴露接口；补充上下文压缩、关键状态保留、敏感信息不进模型上下文 | `12_agentic_rag/` |
+| **W13** | 综合项目收尾 | 多文档支持与安全加固；整合 tracing、评估报告、工具调用轨迹和人工干预点；**发挥 Vue 前端优势，交付 Controllable Agent Dashboard（可视化状态交互看板，支持 HITL 断点干预与 DAG 渲染）** | `13_final_project/` |
 
 **里程碑**：可演示的完整系统，不只“能跑通”，还要能解释为什么这样设计、怎么失败恢复、如何做最低限度安全防护。
 
@@ -62,9 +72,10 @@
 |---|---|---|
 | W3 | HNSW / IVF 索引原理 | Q4、Q8 |
 | W4 | Prompt Injection、上下文预算、非可信上下文 | 安全追问 |
-| W7 | Late Chunking、CRAG / Self-RAG 变体 | Q13、Q15 |
+| W7 | Late Chunking、CRAG / Self-RAG 变体及适用边界 | Q13、Q15 |
+| W10 | Function Calling、MCP、工具权限边界、工具调用审计 | 工具调用追问 |
 | W11 | Agent 状态管理、工具失败恢复、人工审批 | Q20、Q22 |
-| W13 | 多语言 RAG、Token 成本控制、Agent 落地边界 | Q29、Q30 |
+| W13 | 多语言 RAG、Token 成本控制、Agent 落地边界、可观测性 | Q29、Q30 |
 
 ---
 
@@ -78,11 +89,12 @@ W1-W9（RAG 阶段）：
   全手写 Python
 
 W10-W13（Agent 阶段）：
-  LLM：GPT-4o-mini、Qwen-Max 或 2026 主流推理模型
+  LLM：当前主流低成本模型 + 当前主流推理模型（按价格、上下文、工具调用稳定性动态选择）
+  Tool Protocol：Function Calling + 最小 MCP 工具接口对照
   Agent Runtime：先手写最小闭环，再引入 Controllable DAG 编排思想
   API / 前端：FastAPI + Vue 3（实现 Controllable Agent 可视化交互看板）
-  可观测性：LangSmith 或 Phoenix
-  重点能力：Tool Calling、状态管理（Checkpoint）、上下文压缩、安全防御（防注入）、人类协同（HITL）
+  可观测性：结构化日志 + tracing + LangSmith 或 Phoenix
+  重点能力：Tool Calling、MCP、状态管理（Checkpoint）、上下文压缩、安全防御（防注入）、人类协同（HITL）、审计与回滚
 ```
 
 ---

@@ -37,6 +37,16 @@
 - 仓库结构更像真实 AI 工程项目
 - 到 W10-W13 时可以自然扩展成可展示的成品
 
+## 2026-05 校准结论
+
+当前项目不需要推倒重来，优先做三类小幅调整：
+
+- **实验结果前移沉淀**：从 W5 开始保存检索结果、参数、Top-K、人工判断和结论，避免到 W8 才从零建设评估体系。
+- **可观测性前移**：W8-W9 开始引入最小 tracing / eval 报告；W13 负责整合展示，不再把可观测性当作最后补丁。
+- **Agent 工具层补 MCP**：W10 在 Function Calling 之外增加最小 MCP 工具接口对照，重点学习工具描述、权限边界、输入校验、审计和失败恢复。
+
+模型选择不写死具体型号。Agent 阶段只约束能力类型：低成本模型用于常规工具调用，推理模型用于复杂规划和长任务验证。
+
 ---
 
 ## 三、分阶段执行
@@ -203,7 +213,7 @@ common/
 
 ---
 
-## P2：建立实验记录与评估体系（建议 W5-W9 完成）
+## P2：建立实验记录、评估与最小可观测性（建议 W5-W9 完成）
 
 > 这是从“写代码练习”走向“AI 工程方法论”的关键一步。
 
@@ -241,6 +251,10 @@ experiments/
 - Recall@K
 - Precision@K
 - MRR
+- Answer Faithfulness
+- Refusal Quality
+- Citation Consistency
+- 安全失败率
 
 **为什么**
 
@@ -266,6 +280,29 @@ experiments/
 **验收标准**
 
 - 实验数据不再散落在代码常量里
+
+### 4. 引入最小 tracing / eval 报告
+
+**要做什么**
+
+- 从 W8-W9 开始记录一次 RAG 请求的关键链路：
+  - query
+  - retrieval strategy
+  - retrieved chunks
+  - rerank score
+  - prompt context
+  - model answer
+  - judge result
+- 先用本地 `json/md` 报告实现，后续再接 LangSmith 或 Phoenix
+
+**为什么**
+
+- 2026 年的 RAG / Agent 工程更强调可诊断性
+- 没有 trace，就很难判断问题出在召回、排序、上下文组装、生成还是工具调用
+
+**验收标准**
+
+- 任意一次失败回答都能回放关键输入、候选证据和评分过程
 
 ---
 
@@ -300,13 +337,26 @@ experiments/
 - FastAPI API
 - 简单 Web 界面
 
-### 4. 增加评估与可观测性说明
+### 4. 整合评估与可观测性说明
 
-在 W13 前后补上：
+在 W13 前后整合已有产物：
 
 - 检索评估结论
 - 回答质量评估结论
 - LangSmith 或 Phoenix 接入说明
+- Agent 工具调用 trace
+- 人工审批与失败恢复记录
+
+### 5. 补 Agent 工具层协议与安全边界
+
+W10-W13 需要补充：
+
+- Function Calling 与 MCP 的最小对照
+- 工具 Schema、参数校验、白名单、超时、重试、降级
+- 高风险工具的人类审批
+- secret 不进入模型上下文
+- 工具调用日志可审计
+- dry-run / rollback 思路
 
 ---
 
@@ -319,9 +369,10 @@ experiments/
 3. 建 `common/` 抽公共函数
 4. 建 `tests/` 并补最小单测
 5. 加 `ruff` 和 `pytest`
-6. 给实验结果落盘到 `experiments/results/`
-7. 重写根 README，增加项目化表达
-8. 到 Agent 阶段再接 FastAPI 和可观测性
+6. 给 W5/W6 实验结果落盘到 `experiments/results/`
+7. 在 W8/W9 建最小 eval / tracing 报告
+8. 在 W10 补 Function Calling 与 MCP 的最小对照实验
+9. 到 W13 再接 FastAPI、Vue Dashboard、LangSmith 或 Phoenix
 
 ---
 
@@ -329,14 +380,14 @@ experiments/
 
 如果只做最有价值的 3 件事，我建议是：
 
-1. **配置外置化**
-   - 这是安全问题，也是后续切换模型和服务的基础
+1. **实验结果结构化落盘**
+   - 当前已经进入 RAG 优化阶段，只有把参数、Top-K、判断和结论保存下来，后面评估才有可比性
 
-2. **抽公共模块**
-   - 这是控制重复代码的关键
+2. **最小评估与 tracing 报告**
+   - 这是把“感觉效果更好”升级成“能定位瓶颈”的关键
 
-3. **最小测试体系**
-   - 这是确保后面重构不把前面实验搞坏的关键
+3. **Agent 阶段补 MCP 与工具安全边界**
+   - 这是 2026 年 Agent 工程的关键补丁，但不需要打断当前 W5/W6 主线
 
 ---
 
@@ -354,6 +405,10 @@ experiments/
 - [ ] 新增 `tests/test_similarity.py`
 - [ ] 新增 `tests/test_text_splitters.py`
 - [ ] 新增 `experiments/results/`
+- [ ] W5/W6 实验输出结构化 `json/md` 结果
+- [ ] W8/W9 新增最小 tracing / eval 报告
+- [ ] W10 新增 Function Calling 与 MCP 最小对照实验
+- [ ] W11-W13 补工具调用审计、HITL、dry-run / rollback 说明
 - [ ] 重写根 README 的“如何运行”和“项目结构”部分
 
 ---
